@@ -1,11 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
-import { fetchProductTypes } from "@/lib/api/productTypes";
+import { fetchProductTypes } from "@/lib/api/product-types";
 import Link from "next/link";
-import { ProductType } from "@/types/productTypes";
-import { FiEye } from "react-icons/fi";
+import { ProductType } from "@/types/product-types";
+import { FiEye, FiPlus } from "react-icons/fi";
+import { useProductType } from "@/context/product-type-context";
 
 export default function ProductTypesPage() {
+  const { reset } = useProductType();
   const [productTypes, setProductTypes] = useState<ProductType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +28,16 @@ export default function ProductTypesPage() {
 
   return (
     <div className="ml-64 p-6 bg-gray-100 min-h-screen">
-      <h1 className="text-3xl font-semibold text-dark mb-6">Product Types</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-semibold text-dark">Product Types</h1>
+        <Link 
+          href="/admin/product-types/create"
+          onClick={reset}
+          className="bg-primary text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-indigo-700 transition"
+        >
+          <FiPlus /> Create Product Type
+        </Link>
+      </div>
 
       {loading && <p className="text-gray-500">Loading product types...</p>}
       {error && <p className="text-red-500">{error}</p>}

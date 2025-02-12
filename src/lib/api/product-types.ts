@@ -1,4 +1,4 @@
-import { ProductType } from "@/types/productTypes";
+import { ProductType } from "@/types/product-types";
 
 export async function fetchProductTypes(): Promise<ProductType[]> {
   try {
