@@ -21,7 +21,7 @@ export default function ProductsPage() {
         setProducts(data.products);
         setTotalPages(data.totalPages);
       } catch (err) {
-        setError("Error fetching products.");
+        setError("Error fetching products: " + (err as Error).message);
       } finally {
         setLoading(false);
       }

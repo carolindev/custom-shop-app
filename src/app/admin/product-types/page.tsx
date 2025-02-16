@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { fetchProductTypes } from "@/lib/api/product-types";
 import Link from "next/link";
 import { ProductType } from "@/types/product-types";
-import { FiEye, FiPlus } from "react-icons/fi";
+import { FiPlus } from "react-icons/fi";
 import { useProductType } from "@/context/product-type-context";
 
 export default function ProductTypesPage() {
