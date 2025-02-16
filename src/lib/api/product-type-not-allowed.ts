@@ -1,9 +1,11 @@
+import { API_BASE_URL } from "@/config/config"; 
+
 export async function addNotAllowedCombinations(
   productTypeId: string,
   notAllowedCombinations: { attributeId: number; attributeOptionId: number; }[][]
 ) {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/product-types/not-allowed-combinations`,
+    `${API_BASE_URL}/v1/admin/product-types/not-allowed-combinations`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },

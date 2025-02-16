@@ -60,7 +60,7 @@ export default function ProductTypesPage() {
                 <td className="p-4 capitalize text-gray-600">{type.config.customisation.replace("_", " ")}</td>
                 <td className="p-4 text-center">
                   <Link href={`/admin/product-types/${type.id}`} className="text-primary hover:underline flex justify-center items-center gap-1">
-                    <FiEye /> View
+                    {/* <FiEye /> View */}
                   </Link>
                 </td>
               </tr>

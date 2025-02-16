@@ -1,8 +1,9 @@
 import { ProductType } from "@/types/product-types";
+import { API_BASE_URL } from "@/config/config";
 
 export async function fetchProductTypes(): Promise<ProductType[]> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/product-types`, {
+    const res = await fetch(`${API_BASE_URL}/v1/admin/product-types`, {
       headers: {
         "Content-Type": "application/json"
       },
