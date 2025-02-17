@@ -15,21 +15,32 @@ export default function HomePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isLastPage, setIsLastPage] = useState(false);
 
-  // We'll store the IntersectionObserver itself here
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const hasFetchedPages = useRef(new Set()); // To track fetched pages and avoid duplicates
 
-  // Load products whenever `currentPage` changes
+  // Reset products when coming back to the page
+  useEffect(() => {
+    setProducts([]);
+    setCurrentPage(1);
+    setIsLastPage(false);
+    hasFetchedPages.current.clear(); // Reset fetched pages
+  }, []);
+
   useEffect(() => {
     async function loadProducts() {
+      if (loading || isLastPage || hasFetchedPages.current.has(currentPage)) return;
+
       setLoading(true);
       try {
         const data: ProductsResponse = await fetchProducts(currentPage);
 
-        // Append new products instead of replacing
-        setProducts((prevProducts) => [...prevProducts, ...data.products]);
+        setProducts((prevProducts) => {
+          const uniqueProducts = new Map([...prevProducts, ...data.products].map(p => [p.id, p]));
+          return Array.from(uniqueProducts.values());
+        });
 
-        // If the backend indicates it's the last page, set the state
         setIsLastPage(data.lastPage);
+        hasFetchedPages.current.add(currentPage);
       } catch (err) {
         setError("Error loading products: " + (err as Error).message);
       } finally {
@@ -40,37 +51,23 @@ export default function HomePage() {
     loadProducts();
   }, [currentPage]);
 
-  /**
-   * IntersectionObserver callback ref:
-   * - Attaches to the last product in the list
-   * - When it becomes visible, increase `currentPage`.
-   */
   const lastProductCallback = useCallback(
     (node: HTMLDivElement | null) => {
       if (loading || isLastPage) return;
 
-      // Disconnect any old observer before creating a new one
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
+      if (observerRef.current) observerRef.current.disconnect();
 
       observerRef.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting) {
-          // Load the next page
           setCurrentPage((prevPage) => prevPage + 1);
         }
       });
 
-      if (node) {
-        observerRef.current.observe(node);
-      }
+      if (node) observerRef.current.observe(node);
     },
     [loading, isLastPage]
   );
 
-  /**
-   * Navigate to product details on click.
-   */
   function goToProduct(productId: string) {
     router.push(`/product/${productId}`);
   }
@@ -81,10 +78,8 @@ export default function HomePage() {
 
       {error && <p className="text-center text-red-500">{error}</p>}
 
-      {/* Product Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
         {products.map((product, index) => {
-          // If this is the last product, attach the callback ref
           const isLast = index === products.length - 1;
 
           return (
@@ -115,7 +110,6 @@ export default function HomePage() {
         })}
       </div>
 
-      {/* Loading Indicator */}
       {loading && (
         <p className="text-center text-gray-500 mt-4">
           Loading more products...

@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { fetchProductById } from "@/lib/api/product-details";
 import { fetchAvailableOptions } from "@/lib/api/product-available-options";
+import { useAddToCart } from "@/hooks/use-add-to-cart";
 import { ProductData, ProductAttribute } from "@/types/products";
 
 export default function ProductDetails() {
+  const router = useRouter();
   const params = useParams();
   const productId = params?.id as string;
 
@@ -18,7 +20,8 @@ export default function ProductDetails() {
   const [loadingProduct, setLoadingProduct] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load product initially
+  const { addToCart, loading: addingToCart, error: cartError } = useAddToCart();
+
   useEffect(() => {
     if (!productId) return;
 
@@ -44,48 +47,35 @@ export default function ProductDetails() {
     }));
   }
 
-  /**
-   * Fetch updated options for a specific attribute.
-   * We do this onMouseDown so the user can still open the dropdown,
-   * but they see "Loading..." while it's fetching.
-   */
+  /** Load updated options for a specific attribute on mouse down */
   async function handleDropdownFetch(attribute: ProductAttribute) {
     if (!product) return;
-
-    // If already loading this exact attribute, skip to avoid duplicate requests
-    if (loadingAttributeId === attribute.id) return;
+    if (loadingAttributeId === attribute.id) return; 
 
     try {
       setLoadingAttributeId(attribute.id);
 
-      // Build a list of other attributes' selected option IDs
+      // Exclude this attribute's own selection from the query
       const selectedOptionIds = Object.entries(selectedOptions)
-        // Exclude this attribute’s own selection
         .filter(([key]) => Number(key) !== attribute.id)
         .map(([, val]) => val);
 
-      // Fetch the new options
       const updatedAttribute = await fetchAvailableOptions(
         productId,
         attribute.id,
         selectedOptionIds.join(",")
       );
 
-      // Update the matching attribute in our product data
+      // Merge the new options into the attribute array
       setProduct((prev) => {
         if (!prev) return null;
-
         return {
           ...prev,
-          productAttributes: prev.productAttributes.map((attr) => {
-            if (attr.id === updatedAttribute.attributeId) {
-              return {
-                ...attr,
-                options: updatedAttribute.options,
-              };
-            }
-            return attr;
-          }),
+          productAttributes: prev.productAttributes.map((attr) =>
+            attr.id === updatedAttribute.attributeId
+              ? { ...attr, options: updatedAttribute.options }
+              : attr
+          ),
         };
       });
     } catch (err) {
@@ -97,9 +87,24 @@ export default function ProductDetails() {
 
   /** True if the user has selected all attributes */
   const allAttributesSelected =
-    product?.productAttributes?.every(
-      (attr) => selectedOptions[attr.id] !== undefined
-    ) ?? false;
+    product?.productAttributes?.every((attr) => selectedOptions[attr.id] !== undefined) ??
+    false;
+
+  /**
+   * Called when the user clicks "Add to Cart"
+   */
+  async function handleAddToCart() {
+    if (!product) return;
+
+    try {
+      await addToCart(productId, selectedOptions, 1);
+      router.push("/cart");
+    } catch (err) {
+      alert((err as Error).message);
+    }
+  }
+
+  // --- Render ---
 
   if (loadingProduct) {
     return <p className="text-center text-gray-500">Loading product...</p>;
@@ -159,17 +164,14 @@ export default function ProductDetails() {
                 <select
                   className="w-full p-2 border rounded-lg mt-1"
                   value={selectedOptions[attribute.id] ?? ""}
-                  onChange={(e) =>
-                    handleOptionChange(attribute.id, Number(e.target.value))
-                  }
-                  // Fire the fetch on mouse down (before the dropdown opens)
+                  onChange={(e) => handleOptionChange(attribute.id, Number(e.target.value))}
                   onMouseDown={() => handleDropdownFetch(attribute)}
                 >
                   {isLoadingThisDropdown ? (
-                    // When loading, show only one "Loading..." option
-                    <option value="">Loading {attribute.name}...</option>
+                    <option value="">
+                      Loading {attribute.name}...
+                    </option>
                   ) : (
-                    // Otherwise, show the normal options
                     <>
                       <option value="">Select {attribute.name}</option>
                       {attribute.options.map((option) => (
@@ -185,15 +187,17 @@ export default function ProductDetails() {
           })}
         </div>
 
+        {/* Show an error if hooking up addToCart fails */}
+        {cartError && <p className="text-red-500 mt-2">{cartError}</p>}
+
         <button
+          onClick={handleAddToCart}
           className={`w-full px-4 py-2 rounded-lg text-white mt-4 ${
-            allAttributesSelected
-              ? "bg-primary hover:bg-indigo-700"
-              : "bg-gray-400 cursor-not-allowed"
+            allAttributesSelected ? "bg-primary hover:bg-indigo-700" : "bg-gray-400 cursor-not-allowed"
           }`}
-          disabled={!allAttributesSelected}
+          disabled={!allAttributesSelected || addingToCart}
         >
-          Add to Cart
+          {addingToCart ? "Adding to Cart..." : "Add to Cart"}
         </button>
       </div>
     </div>
