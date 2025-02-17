@@ -16,7 +16,7 @@ export default function ProductsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   
-  const { handleDeleteRequest, loading: deleting, error: deleteError } = useDeleteProduct();
+  const { handleDeleteRequest } = useDeleteProduct();
 
   // Load products whenever `page` changes
   useEffect(() => {
