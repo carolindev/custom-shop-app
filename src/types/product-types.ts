@@ -33,3 +33,20 @@ export interface ProductTypeDetails {
     }[];
     notAllowedCombinations: { attributeId: number; attributeOptionId: number }[][];
   }
+
+export interface ProductTypeData {
+  id: string;
+  name: string;
+  attributes: {
+    id: number;
+    name: string;
+    options: {
+      id: number;
+      name: string;
+    }[];
+  }[];
+  notAllowedCombinations: {
+    combinationId: number;
+    options: { id: number; name: string }[];
+  }[];
+}
