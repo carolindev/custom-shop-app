@@ -102,7 +102,11 @@ export default function HomePage() {
                 className="w-full h-48 object-cover rounded-md"
               />
               <h2 className="text-lg font-semibold mt-2">{product.name}</h2>
-              <p className="text-gray-500 text-sm">{product.productTypeName}</p>
+              <p className="text-gray-500 text-sm">
+                {product.description.length > 100
+                  ? product.description.substring(0, 100) + "..."
+                  : product.description}
+              </p>
               <p className="text-primary font-bold text-xl mt-2">
                 ${product.price.toFixed(2)}
               </p>
